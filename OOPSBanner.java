@@ -1,90 +1,72 @@
 
- 
 
 public class OOPSBannerApp {
 
-    /**
-     * CharacterPatternMap - Inner class for storing character-to-pattern mappings
-     * Encapsulates a single character and its corresponding ASCII art pattern.
-     */
     static class CharacterPatternMap {
         private Character character;
         private String[] pattern;
 
-        // Constructor
         public CharacterPatternMap(Character character, String[] pattern) {
             this.character = character;
             this.pattern = pattern;
         }
 
-        // Getters
-        public Character getCharacter() {
-            return character;
-        }
-
-        public String[] getPattern() {
-            return pattern;
-        }
+        public Character getCharacter() { return character; }
+        public String[] getPattern() { return pattern; }
     }
 
     /**
-     * Static Method to Create and initialize CharacterPatternMap array
+     * Loads patterns from an external text file
      */
-    public static CharacterPatternMap[] createCharacterPatternMaps() {
-        CharacterPatternMap[] charMaps = new CharacterPatternMap[4];
-
-        charMaps[0] = new CharacterPatternMap('O', new String[]{
-            "  *** ", " * * ", " * * ", " * * ", "  *** "
-        });
-        charMaps[1] = new CharacterPatternMap('P', new String[]{
-            " ***** ", " * * ", " ***** ", " * ", " * "
-        });
-        charMaps[2] = new CharacterPatternMap('S', new String[]{
-            "  **** ", " * ", "  *** ", "     * ", " **** "
-        });
-        charMaps[3] = new CharacterPatternMap(' ', new String[]{
-            "       ", "       ", "       ", "       ", "       "
-        });
-
+    public static List<CharacterPatternMap> loadPatternsFromFile(String filename) {
+        List<CharacterPatternMap> charMaps = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(":");
+                if (parts.length == 2) {
+                    char character = parts[0].charAt(0);
+                    String[] pattern = parts[1].split(",");
+                    charMaps.add(new CharacterPatternMap(character, pattern));
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading pattern file: " + e.getMessage());
+        }
         return charMaps;
     }
 
-    /**
-     * Retrieves the ASCII pattern for a given character from the map array
-     */
-    public static String[] getCharacterPattern(char ch, CharacterPatternMap[] charMaps) {
+    public static String[] getCharacterPattern(char ch, List<CharacterPatternMap> charMaps) {
         for (CharacterPatternMap map : charMaps) {
-            if (map.getCharacter() == ch) {
+            if (Character.toUpperCase(map.getCharacter()) == Character.toUpperCase(ch)) {
                 return map.getPattern();
             }
         }
-        // Return space pattern if character not found
-        return charMaps[3].getPattern(); 
+        // Return blank spaces if not found
+        return new String[]{"       ", "       ", "       ", "       ", "       "};
     }
 
-    /**
-     * Prints a message as a banner by assembling character patterns line by line
-     */
-    public static void printMessage(String message, CharacterPatternMap[] charMaps) {
-        int height = 5; // Height of our ASCII letters
-        for (int i = 0; i < height; i++) {
-            StringBuilder line = new StringBuilder();
+    public static void printMessage(String message, List<CharacterPatternMap> charMaps) {
+        for (int i = 0; i < 5; i++) { // Assuming pattern height is 5
+            StringBuilder displayLine = new StringBuilder();
             for (char ch : message.toCharArray()) {
-                String[] pattern = getCharacterPattern(Character.toUpperCase(ch), charMaps);
-                line.append(pattern[i]).append("  ");
+                String[] pattern = getCharacterPattern(ch, charMaps);
+                displayLine.append(pattern[i]).append("  ");
             }
-            System.out.println(line.toString());
+            System.out.println(displayLine.toString());
         }
     }
 
     public static void main(String[] args) {
-        // Initialize the character mappings
-        CharacterPatternMap[] charMaps = createCharacterPatternMaps();
-        
-        // Define the message to be displayed
+        // Load mappings from the external file
+        List<CharacterPatternMap> charMaps = loadPatternsFromFile("banner_patterns.txt");
+
+        if (charMaps.isEmpty()) {
+            System.out.println("No patterns loaded. Check banner_patterns.txt");
+            return;
+        }
+
         String message = "OOPS";
-        
-        // Print the banner message
         printMessage(message, charMaps);
     }
 }
